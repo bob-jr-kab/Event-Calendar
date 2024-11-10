@@ -1,11 +1,29 @@
+// src/components/EventCalendar.jsx
+
 import React, { useState, useEffect } from "react";
-import FullCalendar from "@fullcalendar/react";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import interactionPlugin from "@fullcalendar/interaction";
+import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import { Box, useMediaQuery, useTheme, Card } from "@mui/material";
 import EventList from "./EventList";
 import EventDetails from "./EventDetails";
 import { fetchEvents } from "../functions/firebaseEvents";
+import format from "date-fns/format";
+import parse from "date-fns/parse";
+import startOfWeek from "date-fns/startOfWeek";
+import getDay from "date-fns/getDay";
+import enUS from "date-fns/locale/en-US"; // Import the locale directly
+import "react-big-calendar/lib/css/react-big-calendar.css";
+
+// Date-fns localization setup with ES6 imports
+const locales = {
+  "en-US": enUS,
+};
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek,
+  getDay,
+  locales,
+});
 
 export default function EventCalendar() {
   const [events, setEvents] = useState([]);
@@ -13,11 +31,9 @@ export default function EventCalendar() {
   const [selectedDayEvents, setSelectedDayEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-  // Set up theme and media query for responsive design
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // Fetch events on component mount
   useEffect(() => {
     const loadEvents = async () => {
       const eventsData = await fetchEvents();
@@ -26,118 +42,95 @@ export default function EventCalendar() {
     loadEvents();
   }, []);
 
-  // Handle date click to select a day and display its events
-  const handleDateClick = (arg) => {
-    const date = arg.dateStr;
+  const handleDateClick = (date) => {
     setSelectedDate(date);
-    const dayEvents = events.filter((event) => event.date === date);
+    const dayEvents = events.filter(
+      (event) => new Date(event.date).toDateString() === date.toDateString()
+    );
     setSelectedDayEvents(dayEvents);
-    setSelectedEvent(null); // Reset event selection when clicking a date
+    setSelectedEvent(null);
   };
 
-  // Add an event and update the calendar display
-  const handleAddEvent = async (newEvent) => {
-    setEvents((prevEvents) => [
-      ...prevEvents,
-      { ...newEvent, start: newEvent.date },
-    ]);
-    setSelectedDayEvents((prevDayEvents) => [...prevDayEvents, newEvent]);
-  };
-
-  // Handle event click in calendar to display event details
-  const handleEventClick = (clickedEvent) => {
-    setSelectedEvent(clickedEvent);
-  };
-
-  // Function to update event in the local state after editing
-  const handleUpdateEvent = (updatedEvent) => {
-    setEvents((prevEvents) =>
-      prevEvents.map((event) =>
-        event.id === updatedEvent.id ? updatedEvent : event
-      )
-    );
-    setSelectedDayEvents((prevDayEvents) =>
-      prevDayEvents.map((event) =>
-        event.id === updatedEvent.id ? updatedEvent : event
-      )
-    );
-  };
-
-  // Function to delete an event from the local state after deletion
-  const handleDeleteEvent = (deletedEventId) => {
-    setEvents((prevEvents) =>
-      prevEvents.filter((event) => event.id !== deletedEventId)
-    );
-    setSelectedDayEvents((prevDayEvents) =>
-      prevDayEvents.filter((event) => event.id !== deletedEventId)
-    );
-    setSelectedEvent(null); // Go back to the event list after deletion
-  };
-
-  // Custom rendering to display green line for each event
-  const renderEventContent = () => {
-    return (
-      <div
-        style={{ borderTop: "3px solid green", marginTop: 2, width: "100%" }}
-      />
-    );
+  const handleEventClick = (event) => {
+    setSelectedEvent(event);
   };
 
   return (
     <Box
       display="flex"
-      flexDirection={isSmallScreen ? "column" : "row"} // Stack vertically on small screens
-      gap={4}
+      flexDirection={isSmallScreen ? "column" : "row"}
+      gap={2}
       p={2}
     >
-      {/* Calendar View */}
       <Box
         flex={2}
         sx={{
+          height: 500,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
           overflow: "hidden",
-          height: isSmallScreen ? "140px" : 470, // Set responsive height for calendar
+          backgroundColor: theme.palette.background.default,
         }}
       >
-        <FullCalendar
-          plugins={[dayGridPlugin, interactionPlugin]}
-          initialView="dayGridMonth"
+        <Calendar
+          localizer={localizer}
           events={events.map((event) => ({
-            title: event.title,
-            date: event.date,
+            ...event,
+            start: new Date(event.date),
+            end: new Date(event.date),
           }))}
-          dateClick={handleDateClick}
-          eventClick={(info) => handleEventClick(info.event.extendedProps)} // Pass event details
-          dayMaxEventRows={5}
-          height="auto"
-          aspectRatio={1.5}
-          eventContent={renderEventContent}
+          defaultView="month"
+          style={{ height: "100%", padding: "1em", width: "auto" }}
+          onSelectSlot={(slotInfo) => handleDateClick(slotInfo.start)}
+          selectable
+          onSelectEvent={(event) => handleEventClick(event)}
         />
       </Box>
 
-      {/* Card Component to display EventList or EventDetails dynamically */}
       <Card
         sx={{
           flex: 1,
           p: 3,
-          boxShadow: 3, // Adds shadow effect
-          borderRadius: 2, // Adds rounded corners
+          boxShadow: 3,
+          borderRadius: 2,
           backgroundColor: theme.palette.background.default,
         }}
       >
         {selectedEvent ? (
-          // Display EventDetails if an event is selected
           <EventDetails
             event={selectedEvent}
             onBack={() => setSelectedEvent(null)}
-            onDeleteEvent={handleDeleteEvent}
-            onUpdateEvent={handleUpdateEvent}
+            onDeleteEvent={(id) => {
+              setEvents(events.filter((event) => event.id !== id));
+              setSelectedEvent(null);
+            }}
+            onUpdateEvent={(updatedEvent) => {
+              setEvents((prevEvents) =>
+                prevEvents.map((event) =>
+                  event.id === updatedEvent.id ? updatedEvent : event
+                )
+              );
+              setSelectedEvent(updatedEvent);
+            }}
           />
         ) : (
-          // Display EventList if no event is selected
           <EventList
             selectedDate={selectedDate}
             events={selectedDayEvents}
-            onAddEvent={handleAddEvent}
+            onAddEvent={(newEvent) => {
+              setEvents((prevEvents) => [...prevEvents, newEvent]);
+              if (
+                selectedDate &&
+                new Date(newEvent.date).toDateString() ===
+                  selectedDate.toDateString()
+              ) {
+                setSelectedDayEvents((prevDayEvents) => [
+                  ...prevDayEvents,
+                  newEvent,
+                ]);
+              }
+            }}
             onEventClick={handleEventClick}
           />
         )}
