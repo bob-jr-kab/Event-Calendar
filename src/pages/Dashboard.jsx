@@ -46,7 +46,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div>
+    <div style={{ backgroundColor: theme.palette.background.default }}>
       <AppBar
         sx={{
           bgcolor: theme.palette.mode === "dark" ? "#6e6f6f" : "primary.main",
@@ -80,7 +80,7 @@ export default function Dashboard() {
       <Box
         sx={{
           mt: 4,
-          width: isSmallScreen ? "100%" : isTablet ? "100%" : "80%",
+          width: isSmallScreen ? "100%" : "90%",
           margin: "auto",
         }}
       >
