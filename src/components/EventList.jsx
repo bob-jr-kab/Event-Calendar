@@ -22,6 +22,7 @@ import {
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { format } from "date-fns";
+import { addEvent } from "../functions/firebaseEvents"; // Import addEvent from firebaseEvents
 
 export default function EventList({
   selectedDate,
@@ -55,14 +56,22 @@ export default function EventList({
     if (eventTitle && selectedDate) {
       const newEvent = {
         title: eventTitle,
-        date: selectedDate,
+        date: selectedDate.toISOString(), // Store ISO string format for consistency
         location: eventLocation || "",
         email: eventEmail || "",
         startTime: isAllDay ? "All Day" : eventStartTime,
         endTime: isAllDay ? "All Day" : eventEndTime,
         reminder: eventReminder,
       };
-      onAddEvent(newEvent);
+
+      try {
+        // Add event to Firestore
+        const addedEvent = await addEvent(newEvent);
+        onAddEvent(addedEvent); // Update parent state with the newly added event
+      } catch (error) {
+        console.error("Error adding event:", error);
+      }
+
       handleDialogClose();
     }
   };

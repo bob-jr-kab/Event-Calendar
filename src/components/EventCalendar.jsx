@@ -41,12 +41,12 @@ export default function EventCalendar() {
   return (
     <Box
       display="flex"
-      flexDirection={isSmallScreen ? "column" : "row"}
+      flexDirection={isSmallScreen ? "column" : isTablet ? "column" : "row"}
       gap={2}
       p={2}
       sx={{
         backgroundColor: theme.palette.background.default,
-        height: "100vh",
+        minHeight: isSmallScreen ? "500px" : "100vh",
         overflow: "auto",
       }}
     >
@@ -56,8 +56,8 @@ export default function EventCalendar() {
         sx={{
           p: 2,
           borderRadius: 2,
-          height: "500px", // Constrains the calendar's height
-          width: isSmallScreen ? "100%" : isTablet ? "75%" : "65%", // Adjust width for tablets and desktops
+          height: "500px",
+          width: "100%",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -111,34 +111,7 @@ export default function EventCalendar() {
             ) : null;
           }}
           className="react-calendar"
-          sx={{
-            "& .react-calendar": {
-              backgroundColor: theme.palette.background.default,
-              border: "none",
-              width: "100%",
-              borderRadius: "10px",
-            },
-            "& .react-calendar__tile": {
-              height: "70px", // Adjust cell height for better spacing
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: theme.palette.text.primary,
-              fontWeight: "bold",
-            },
-            "& .react-calendar__tile--active": {
-              backgroundColor: theme.palette.primary.main,
-              color: theme.palette.primary.contrastText,
-              borderRadius: "8px",
-            },
-            "& .react-calendar__tile--now": {
-              backgroundColor: theme.palette.action.hover,
-              borderRadius: "8px",
-            },
-            "& .react-calendar__month-view__days__day": {
-              border: `1px solid ${theme.palette.divider}`,
-            },
-          }}
+          sx={{ backgroundColor: "green" }}
         />
       </Box>
 
@@ -150,8 +123,9 @@ export default function EventCalendar() {
           boxShadow: 3,
           borderRadius: 2,
           backgroundColor: theme.palette.background.paper,
-          width: isSmallScreen ? "100%" : isTablet ? "65%" : "35%", // Adjust width for tablets and desktops
-          height: "500px",
+          width: "100%", // Adjust width dynamically
+          height: isSmallScreen ? "unset" : "500px", // Use auto height for small screens
+          minHeight: isSmallScreen ? "200px" : "unset", // Set minHeight for small screens
           overflow: "auto",
         }}
       >

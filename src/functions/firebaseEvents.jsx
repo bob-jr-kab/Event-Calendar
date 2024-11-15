@@ -27,14 +27,18 @@ export const addEvent = async (event) => {
 
 // Function to fetch only events for the logged-in user
 export const fetchEvents = async () => {
-  const user = auth.currentUser;
-  if (user) {
-    const eventsRef = collection(db, "events");
-    const userEventsQuery = query(eventsRef, where("uid", "==", user.uid)); // Filter by user UID
-    const querySnapshot = await getDocs(userEventsQuery);
-    return querySnapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+  try {
+    const user = auth.currentUser;
+    if (user) {
+      const eventsRef = collection(db, "events");
+      const q = query(eventsRef, where("uid", "==", user.uid)); // Filter by logged-in user's UID
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    }
+  } catch (error) {
+    console.error("Error fetching events: ", error);
+    return [];
   }
-  return [];
 };
 
 // Function to delete an event

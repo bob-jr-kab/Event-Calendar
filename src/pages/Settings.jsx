@@ -9,7 +9,12 @@ import {
   Typography,
   Container,
   Alert,
+  IconButton,
+  Breadcrumbs,
+  Link,
 } from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { useNavigate } from "react-router-dom";
 
 const db = getFirestore();
 
@@ -21,6 +26,8 @@ export default function Settings() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
@@ -73,12 +80,35 @@ export default function Settings() {
 
   return (
     <Container maxWidth="sm">
+      {/* Navigation Bar */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          mb: 4,
+        }}
+      >
+        <IconButton onClick={() => navigate("/dashboard")} sx={{ mr: 1 }}>
+          <ArrowBackIcon />
+        </IconButton>
+        <Breadcrumbs separator="›" aria-label="breadcrumb">
+          <Link
+            color="inherit"
+            underline="hover"
+            onClick={() => navigate("/dashboard")}
+            sx={{ cursor: "pointer" }}
+          >
+            Home
+          </Link>
+          <Typography color="text.primary">Settings</Typography>
+        </Breadcrumbs>
+      </Box>
+
       <Box
         sx={{
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          mt: 4,
         }}
       >
         <Typography variant="h5" gutterBottom>

@@ -1,3 +1,4 @@
+// components/EventDetails
 import React, { useState } from "react";
 import {
   Box,
@@ -66,6 +67,7 @@ export default function EventDetails({
       sx={{
         borderRadius: 2,
         p: 2,
+        height: "100%",
       }}
     >
       {/* Header with back button and title */}

@@ -1,9 +1,9 @@
-// src/App.jsx
 import React, { useEffect, useState } from "react";
-import { auth } from "./config/firebaseConfig";
-import Signup from "./pages/Signup";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
+import { auth } from "./config/firebaseConfig.jsx";
+import { logout } from "./auth/firebaseAuth.jsx";
+import Signup from "./pages/Signup.jsx";
+import Login from "./pages/Login.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
 import {
   BrowserRouter as Router,
   Routes,
@@ -24,6 +24,38 @@ export default function App() {
     setIsDarkMode(!isDarkMode);
   };
 
+  // Automatically logout after inactivity
+  useEffect(() => {
+    const logoutAfterInactivity = () => {
+      logout();
+      setUser(null); // Update local state after logout
+    };
+
+    let inactivityTimer;
+
+    const resetInactivityTimer = () => {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(logoutAfterInactivity, 15 * 60 * 1000); // 15 minutes
+    };
+
+    const activityEvents = ["mousemove", "keypress", "scroll", "click"];
+
+    // Add event listeners to reset the timer
+    activityEvents.forEach((event) =>
+      window.addEventListener(event, resetInactivityTimer)
+    );
+
+    resetInactivityTimer(); // Start timer on mount
+
+    // Cleanup event listeners on unmount
+    return () => {
+      clearTimeout(inactivityTimer);
+      activityEvents.forEach((event) =>
+        window.removeEventListener(event, resetInactivityTimer)
+      );
+    };
+  }, []);
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setUser(user);
@@ -35,16 +67,16 @@ export default function App() {
     <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
       <CssBaseline />
       <Router>
-        {/* Global App Bar for Theme Toggle */}
+        {/* Theme Toggle Button */}
         <Box
           sx={{
             position: "fixed",
-            bottom: 20, // Adjust spacing from the bottom
-            right: 25, // Adjust spacing from the right
-            zIndex: 1000, // Ensure it stays on top of other elements
+            bottom: 20,
+            right: 25,
+            zIndex: 1000,
             bgcolor: isDarkMode ? "grey.900" : "grey.200",
-            borderRadius: "50%", // Make it circular
-            boxShadow: 3, // Add shadow for better visibility
+            borderRadius: "50%",
+            boxShadow: 3,
             p: 1,
           }}
         >
